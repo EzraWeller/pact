@@ -265,6 +265,7 @@ contract PactFact is EthAccounting {
 
 
     // Modifiers //
+    
     modifier pactExists(uint256 pactId) {
         Pact memory pact = pacts[pactId];
         require(pact.p1 != address(0), "pactExists: p1 is 0 address.");
