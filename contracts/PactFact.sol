@@ -59,6 +59,7 @@ contract PactFact is EthAccounting {
     event TimeoutPact(uint256 pactId, PactState state);
     event ResolveValidPact(uint256 pactId, bool answer, bytes32 salt, PactState state);
 
+
     // External functions //
 
     constructor(uint256 timeoutDays) {
