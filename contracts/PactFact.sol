@@ -75,7 +75,8 @@ contract PactFact is EthAccounting {
         Payout calldata payoutNN,
         string calldata tags
     ) payable external {
-        require(msg.value == p1Deposit, "Message value not equal to party 1 deposit.");
+        require(p2 != address(0), "proposePact: p2 is 0 address.");
+        require(msg.value == p1Deposit, "proposePact: Message value not equal to party 1 deposit.");
         validateMatrix(
             p1Deposit, 
             p2Deposit, 
@@ -101,7 +102,7 @@ contract PactFact is EthAccounting {
         emit ProposePact(pact);
     }
 
-    function cancelPact(uint256 pactId) external {
+    function cancelPact(uint256 pactId) external pactExists(pactId) {
         Pact storage pact = pacts[pactId];
 
         require(pact.state == PactState.Proposed, "cancelPact: Pact must be proposed.");
@@ -113,7 +114,7 @@ contract PactFact is EthAccounting {
         emit CancelPact(pactId, pact.state);
     }
 
-    function sealPact(uint256 pactId) payable external {
+    function sealPact(uint256 pactId) payable external pactExists(pactId) {
         Pact storage pact = pacts[pactId];
 
         require(pact.state == PactState.Proposed, "sealPact: Pact must be proposed.");
@@ -125,7 +126,10 @@ contract PactFact is EthAccounting {
         emit SealPact(pactId, pact.state);
     }
 
-    function submitAnswer1Hash(uint256 pactId, bytes32 answerHash) external {
+    function submitAnswer1Hash(
+        uint256 pactId, 
+        bytes32 answerHash
+    ) external pactExists(pactId) {
         Pact storage pact = pacts[pactId];
 
         require(pact.state == PactState.Sealed, "submitAnswer1Hash: Pact must be sealed.");
@@ -137,10 +141,13 @@ contract PactFact is EthAccounting {
         emit SubmitAnswer1Hash(pactId, pact.answer1Hash, pact.state);
     }
 
-    function submitAnswer2(uint256 pactId, bool answer) external {
+    function submitAnswer2(uint256 pactId, bool answer) external pactExists(pactId) {
         Pact storage pact = pacts[pactId];
 
-        require(pact.state == PactState.Answer1HashSubmitted, "submitAnswer2: Pact must have answer 1 hash submitted.");
+        require(
+            pact.state == PactState.Answer1HashSubmitted, 
+            "submitAnswer2: Pact must have answer 1 hash submitted."
+        );
         require(pact.p2 == msg.sender, "submitAnswer2: Message sender must be party 2.");
 
         pact.answer2 = answer;
@@ -150,7 +157,11 @@ contract PactFact is EthAccounting {
         emit SubmitAnswer2(pactId, pact.answer2, pact.answer2Block, pact.state);
     }
 
-    function submitAnswer1(uint256 pactId, bool answer, bytes32 salt) external {
+    function submitAnswer1(
+        uint256 pactId, 
+        bool answer, 
+        bytes32 salt
+    ) external pactExists(pactId) {
         Pact storage pact = pacts[pactId];
 
         require(pact.state == PactState.Answer2Submitted, "submitAnswer1: Pact must have answer 2 submitted.");
@@ -169,7 +180,7 @@ contract PactFact is EthAccounting {
         }
     }
 
-    function timeOutPact(uint256 pactId) external {
+    function timeOutPact(uint256 pactId) external pactExists(pactId) {
         Pact storage pact = pacts[pactId];
 
         require(pact.state == PactState.Answer2Submitted, "timeoutPact: Pact must have answer 2 submitted."); 
@@ -250,5 +261,14 @@ contract PactFact is EthAccounting {
             return 3;
         }
         revert("Failed to find payout index.");
+    }
+
+
+    // Modifiers //
+    modifier pactExists(uint256 pactId) {
+        Pact memory pact = pacts[pactId];
+        require(pact.p1 != address(0), "pactExists: p1 is 0 address.");
+        require(pact.p2 != address(0), "pactExists: p2 is 0 address.");
+        _;
     }
 }
