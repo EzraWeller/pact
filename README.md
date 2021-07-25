@@ -25,9 +25,9 @@ DAOs and other crypto-entities often enter economic agreements with other crypto
 Pacts provide a flexible way to ensure both sides of a two-party commitment have something to lose by acting in bad faith, which enables crypto-entities to partner more safely with pseudomyous collaborators.
 
 ### 2. Decentralized reputation
-Entities using pacts will leave a record that can inform future partners about their work and behavior. Once a significant graph of completed pacts, each with metadata associating with a particular kind of work or activity, entities can analyze this data to discover or evaluate potential collaborators. Basically, imagine a decentralized, Yelp where the restaurant reviews you, too. 
+Entities using pacts will leave a record that can inform future partners about their work and behavior. Once there's a significant graph of completed pacts, each with metadata associating it with a particular kind of work or activity, entities can analyze this data to discover or evaluate potential collaborators. Basically, imagine a decentralized Yelp where the restaurant reviews you, too. 
 
-This use case turns pacts into more of an [iterated prisoner's dilemma](https://en.wikipedia.org/wiki/Prisoner%27s_dilemma#The_iterated_prisoner's_dilemma), in which entities have a reason not to constantly grief their partners: they'll lose out on future opportunities. Note that an entity with a "ruined" reputation can start over from 0 by making a new pseudonym.
+This use case turns pacts into more of an [iterated prisoner's dilemma](https://en.wikipedia.org/wiki/Prisoner%27s_dilemma#The_iterated_prisoner's_dilemma), in which entities have a reason not to constantly grief their partners: they'll lose out on future opportunities. Note a person with a "ruined" reputation can start over from 0 by making a new pseudonym.
 
 ## How
 This repo includes prototype smart contracts for creating and resolving ETH-staking pacts, which is all that's needed for the first use case (safer collaborations). These contracts are untested, unaudited, and undeployed: rough drafts only!
