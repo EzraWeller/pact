@@ -256,7 +256,7 @@ contract PactFact is EthAccounting {
         Payout calldata payoutTF,
         Payout calldata payoutFT,
         Payout calldata payoutFF
-    ) pure public {
+    ) pure public returns(bool) {
         uint256 depositTotal = p1Deposit + p2Deposit;
         require(
             depositTotal == payoutTT.p1 + payoutTT.p2 + payoutTT.burn, 
@@ -274,6 +274,7 @@ contract PactFact is EthAccounting {
             depositTotal == payoutFF.p1 + payoutFF.p2 + payoutFF.burn, 
             "Deposit total does not equal FF payout total."
         );
+        return true;
     }
 
 

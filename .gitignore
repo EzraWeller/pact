@@ -9,3 +9,5 @@ cache/*
 
 typechain
 typechain/*
+
+yarn-error.log

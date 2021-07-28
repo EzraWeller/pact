@@ -56,10 +56,8 @@ import { PactFact__factory } from '../typechain/factories/PactFact__factory'
  *   - returns different values for same salt, different answers
  * 
  * - validateMatrix
- *   - returns 0 for true true
- *   - returns 1 for true false
- *   - returns 2 for false true
- *   - returns 3 for false false
+ *   - returns for valid matrix
+ *   - throws for invalid matrix
  * 
  * - withdraw
  *   - fails if balance is 0
@@ -364,7 +362,6 @@ describe('PactFact', () => {
 
         it("stores a new pact, increments pactCount, emits ProposePact", async () => {
             await proposeDefPact()
-            // TODO test multiple proposals?
         })
     })
 
@@ -562,40 +559,117 @@ describe('PactFact', () => {
     })
 
     describe('hashAnswer', () => {
-        it.skip("fails if pact state isn't Answer2Submitted", async () => {
+        it("returns same value for same salt & answer", async () => {
+            const hash1 = await pactFactAlice.hashAnswer(true, P1_SALT)
+            const hash2 = await pactFactAlice.hashAnswer(true, P1_SALT)
+            assert.equal(hash1, hash2, 'hashes')
         })
 
-        it.skip("returns different values for different salts, same answer", async () => {
+        it("returns different values for different salts, same answer", async () => {
+            const hash1 = await pactFactAlice.hashAnswer(true, P1_SALT)
+            const pepper: ethersTypes.utils.BytesLike = ethers.utils.formatBytes32String('christmas')
+            const hash2 = await pactFactAlice.hashAnswer(true, pepper)
+            assert.notEqual(hash1, hash2, 'hashes')
         })
 
-        it.skip("returns different values for same salt, different answers", async () => {
+        it("returns different values for same salt, different answers", async () => {
+            const hash1 = await pactFactAlice.hashAnswer(true, P1_SALT)
+            const hash2 = await pactFactAlice.hashAnswer(false, P1_SALT)
+            assert.notEqual(hash1, hash2, 'hashes')
         })
     })
 
     describe('validateMatrix', () => {
-        it.skip("returns 0 for true true", async () => {
+        it("returns for valid matrix", async () => {
+            const matrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
+            const validity = await pactFactAlice.validateMatrix(
+                DEF_P1_DEP,
+                DEF_P2_DEP,
+                matrix[0],
+                matrix[1],
+                matrix[2],
+                matrix[3]
+            )
+            assert.equal(validity, true, 'valid matrix')
         })
 
-        it.skip("returns 1 for true false", async () => {
-        })
-
-        it.skip("returns 2 for false true", async () => {
-        })
-
-        it.skip("returns 3 for false false", async () => {
+        it("throws for invalid matrix", async () => {
+            const matrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
+            matrix[0].p1 = matrix[0].p1.add(100)
+            await expect(pactFactAlice.validateMatrix(
+                DEF_P1_DEP,
+                DEF_P2_DEP,
+                matrix[0],
+                matrix[1],
+                matrix[2],
+                matrix[3]
+            )).to.be.reverted
         })
     })
  
     describe('withdraw', () => {
-        it.skip("fails if balance is 0", async () => {
+        it("fails if balance is 0", async () => {
+            const aliceBalance = await pactFactAlice.accountBalances(await alice.getAddress())
+            assert.equal(Number(aliceBalance), 0, "alice balance")
+            await expect(pactFactAlice.withdraw(await alice.getAddress()))
+                .to.be.reverted
         })
 
-        it.skip("changes account balance to 0, transfers balance to account, emits WithdrawEther", async () => {
+        it("changes account balance to 0, emits WithdrawEther", async () => {
+            await submitDefAnswer1(true, true, 0)
+            
+            await expect(pactFactAlice.withdraw(await alice.getAddress()))
+                .to.emit(pactFactAlice, "WithdrawEther")
+                .withArgs(
+                    await alice.getAddress(),
+                    DEF_P1_DEP
+                )
+
+            const aliceBalance= Number(ethers.utils.formatEther(
+                await pactFactAlice.accountBalances(await alice.getAddress())
+            ))
+            assert.equal(aliceBalance, 0, 'alice balance')
+        })
+
+        it("transfers balance to account", async () => {
+            await submitDefAnswer1(true, true, 0)
+
+            const aliceEtherBefore = Number(ethers.utils.formatEther(
+                await ethers.provider.getBalance(await alice.getAddress())
+            ))
+            const aliceBalanceBefore = Number(ethers.utils.formatEther(
+                await pactFactAlice.accountBalances(await alice.getAddress())
+            ))
+
+            const tx = await pactFactAlice.withdraw(await alice.getAddress())
+            const res = await tx.wait()
+            if (!tx.gasPrice) { throw new Error("no gas price") }
+            const etherOnGas = Number(ethers.utils.formatEther(tx.gasPrice.mul(res.gasUsed)))
+            const aliceEtherAfter = Number(ethers.utils.formatEther(
+                await ethers.provider.getBalance(await alice.getAddress())
+            ))
+            assert.equal(
+                aliceEtherAfter,
+                aliceEtherBefore - etherOnGas + aliceBalanceBefore,
+                'ether transfer' 
+            )
         })
     })
 
     describe('receive', () => {
-        it.skip("emits ReceiveEther", async () => {
+        it("emits ReceiveEther", async () => {
+            const value = ethers.utils.parseEther('1')
+            await expect(
+                alice.sendTransaction({ 
+                    to: pactFactAlice.address,
+                    value
+                })
+            )
+                .to.emit(pactFactAlice, "ReceiveEther")
+                .withArgs(
+                    await alice.getAddress(),
+                    value
+                )
         })
     })
 })
