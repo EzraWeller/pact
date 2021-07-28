@@ -30,9 +30,9 @@ Entities using pacts will leave a record that can inform future partners about t
 This use case turns pacts into more of an [iterated prisoner's dilemma](https://en.wikipedia.org/wiki/Prisoner%27s_dilemma#The_iterated_prisoner's_dilemma), in which entities have a reason not to constantly grief their partners: they'll lose out on future opportunities. Note a person with a "ruined" reputation can start over from 0 by making a new pseudonym.
 
 ## How
-This repo includes prototype smart contracts for creating and resolving ETH-staking pacts, which is all that's needed for the first use case (safer collaborations). These contracts are untested, unaudited, and undeployed: rough drafts only!
+This repo includes prototype smart contracts for creating and resolving ETH-staking pacts, which is all that's needed for the first use-case (safer collaborations). These contracts are untested, unaudited, and undeployed: rough drafts only!
 
-For this data to become useful for decentralized reputation and discovery, something like a subgraph should be added to make historical data usable. Since entities can easily "wash trade" pacts, algorithms like [TrustRank](https://en.wikipedia.org/wiki/TrustRank) or [EigenTrust](https://en.wikipedia.org/wiki/EigenTrust) would probably be the primary ways for a an entity to evaluate how much they should trust a given partner based on their pact history.
+For this data to become useful for decentralized reputation and discovery, something like a subgraph should be added to make historical data usable. Since entities can easily "wash trade" pacts, algorithms like [TrustRank](https://en.wikipedia.org/wiki/TrustRank) or [EigenTrust](https://en.wikipedia.org/wiki/EigenTrust) would probably be the primary ways for an entity to evaluate how much they should trust a given partner based on their pact history.
 
 ## Dev
 1. `yarn`

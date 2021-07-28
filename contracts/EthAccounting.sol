@@ -20,6 +20,7 @@ contract EthAccounting {
 
     function withdraw(address to) external {
         uint256 balance = accountBalances[to];
+        require(balance != 0, "withdraw: to address balance is 0.");
         accountBalances[to] = 0;
         payable(to).transfer(balance);
         emit WithdrawEther(to, balance);
