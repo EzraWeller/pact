@@ -5,7 +5,7 @@ A protocol for creating "pacts": two-party staking agreements used to make colla
 Pacts are configurable prisoner's dilemmas in which:
 1. Two parties each deposit some ETH.
 2. Each party attests to whether the pact has been fulfilled (using commit-reveal for fairness).
-3. Each party gets a payout depending on the attestations.
+3. Each party gets a payout depending on the attestations (configurable for each pact).
 
 A typical pact resembles the classic prisoner's dilemma:
 | | P1 "yes" | P1 "no" |
@@ -16,6 +16,8 @@ A typical pact resembles the classic prisoner's dilemma:
 Like in prisoner's dilemma, "no" is the dominant strategy for both parties if they are uncoordinated / don't trust each other. If they do trust each other, as two parties in a functional partnership ought to, then "yes-yes" is optimal.
 
 Since this is Ethereum, all pact records are public, and a given entity's pact record can grant insight into the quality of their work and behavior in the past.
+
+A version that uses ERC20s or other assets instead of or in addition to ETH is possible (as long as the total assets in each payout scenario = total deposits, it works).
 
 ## Why
 Two main use cases:
