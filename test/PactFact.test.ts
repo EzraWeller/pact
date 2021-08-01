@@ -74,8 +74,8 @@ describe('PactFact', () => {
     let pactFactBob: PactFact
 
     const TIMEOUT = 1
-    const DEF_P1_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('1')
-    const DEF_P2_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('1')
+    const DEF_P1_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('10')
+    const DEF_P2_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('10')
     const P1_SALT: ethersTypes.utils.BytesLike = ethers.utils.formatBytes32String('birthday')
     const DEF_TAGS = 'prisoner,dilemma,tags'
     const BYTES32_0 = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -86,34 +86,62 @@ describe('PactFact', () => {
         burn: ethersTypes.BigNumber
     }
 
+    function randomHalfScalar(): [number, number, number] {
+        const a = Math.round(Math.random() * 10000)
+        const b = Math.round(Math.random() * (10000 - a))
+        const c = 10000 - a - b
+        return [a, b, c]
+    }
+
+    function randomPayoutScalar(): [
+        [number, number],
+        [number, number],
+        [number, number]
+    ] {
+        const p1Scalar = randomHalfScalar()
+        const p2Scalar = randomHalfScalar()
+        return [
+            [p1Scalar[0], p2Scalar[0]],
+            [p1Scalar[1], p2Scalar[1]],
+            [p1Scalar[2], p2Scalar[2]]
+        ]
+    }
+
+    const payoutScalars = [
+        randomPayoutScalar(),
+        randomPayoutScalar(),
+        randomPayoutScalar(),
+        randomPayoutScalar()
+    ]
+
     function defPayoutMatrix(
         p1Deposit: ethersTypes.BigNumber, 
         p2Deposit: ethersTypes.BigNumber   
     ): [Payout, Payout, Payout, Payout] {
         const payoutYY: Payout = {
-            p1: p1Deposit,
-            p2: p2Deposit,
-            burn: ethers.BigNumber.from(0)
+            p1: ( p1Deposit.mul(payoutScalars[0][0][0]).add(p2Deposit.mul(payoutScalars[0][0][1])) ).div(10000),
+            p2: ( p1Deposit.mul(payoutScalars[0][1][0]).add(p2Deposit.mul(payoutScalars[0][1][1])) ).div(10000),
+            burn: ( p1Deposit.mul(payoutScalars[0][2][0]).add(p2Deposit.mul(payoutScalars[0][2][1])) ).div(10000)
         }
         const payoutYN: Payout = {
-            p1: ethers.BigNumber.from(0),
-            p2: p1Deposit.div(2).add(p2Deposit),
-            burn: p1Deposit.div(2)
+            p1: ( p1Deposit.mul(payoutScalars[1][0][0]).add(p2Deposit.mul(payoutScalars[1][0][1])) ).div(10000),
+            p2: ( p1Deposit.mul(payoutScalars[1][1][0]).add(p2Deposit.mul(payoutScalars[1][1][1])) ).div(10000),
+            burn: ( p1Deposit.mul(payoutScalars[1][2][0]).add(p2Deposit.mul(payoutScalars[1][2][1])) ).div(10000)
         }
         const payoutNY: Payout = {
-            p1: p2Deposit.div(2).add(p1Deposit),
-            p2: ethers.BigNumber.from(0),
-            burn: p2Deposit.div(2)
+            p1: ( p1Deposit.mul(payoutScalars[2][0][0]).add(p2Deposit.mul(payoutScalars[2][0][1])) ).div(10000),
+            p2: ( p1Deposit.mul(payoutScalars[2][1][0]).add(p2Deposit.mul(payoutScalars[2][1][1])) ).div(10000),
+            burn: ( p1Deposit.mul(payoutScalars[2][2][0]).add(p2Deposit.mul(payoutScalars[2][2][1])) ).div(10000)
         }
         const payoutNN: Payout = {
-            p1: p1Deposit.div(2),
-            p2: p2Deposit.div(2),
-            burn: p1Deposit.div(2).add(p2Deposit.div(2))
+            p1: ( p1Deposit.mul(payoutScalars[3][0][0]).add(p2Deposit.mul(payoutScalars[3][0][1])) ).div(10000),
+            p2: ( p1Deposit.mul(payoutScalars[3][1][0]).add(p2Deposit.mul(payoutScalars[3][1][1])) ).div(10000),
+            burn: ( p1Deposit.mul(payoutScalars[3][2][0]).add(p2Deposit.mul(payoutScalars[3][2][1])) ).div(10000)
         }
         return [payoutYY, payoutYN, payoutNY, payoutNN]
     }
 
-    function eventDefPayoutMatrix(dpm: [Payout, Payout, Payout, Payout]) {
+    function eventPayoutMatrix(dpm: [Payout, Payout, Payout, Payout]) {
         return [
           [dpm[0].p1, dpm[0].p2, dpm[0].burn],
           [dpm[1].p1, dpm[1].p2, dpm[1].burn],
@@ -124,7 +152,7 @@ describe('PactFact', () => {
 
     async function proposeDefPact() {
         const defMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
-        const eventDPM = eventDefPayoutMatrix(defMatrix)
+        const eventDPM = eventPayoutMatrix(defMatrix)
 
         let pactCount = await pactFactAlice.pactCount()
         assert.equal(Number(pactCount), 0, 'pact count before')
@@ -617,15 +645,17 @@ describe('PactFact', () => {
 
         it("changes account balance to 0, emits WithdrawEther", async () => {
             await submitDefAnswer1(true, true, 0)
+
+            const payoutMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
             
             await expect(pactFactAlice.withdraw(await alice.getAddress()))
                 .to.emit(pactFactAlice, "WithdrawEther")
                 .withArgs(
                     await alice.getAddress(),
-                    DEF_P1_DEP
+                    payoutMatrix[0].p1
                 )
 
-            const aliceBalance= Number(ethers.utils.formatEther(
+            const aliceBalance = Number(ethers.utils.formatEther(
                 await pactFactAlice.accountBalances(await alice.getAddress())
             ))
             assert.equal(aliceBalance, 0, 'alice balance')
