@@ -72,6 +72,7 @@ describe('PactFact', () => {
     let bob: ethersTypes.Signer
     let pactFactAlice: PactFact
     let pactFactBob: PactFact
+    let defMatrix: [Payout, Payout, Payout, Payout]
 
     const TIMEOUT = 1
     const DEF_P1_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('10')
@@ -151,7 +152,6 @@ describe('PactFact', () => {
     }
 
     async function proposeDefPact() {
-        const defMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
         const eventDPM = eventPayoutMatrix(defMatrix)
 
         let pactCount = await pactFactAlice.pactCount()
@@ -308,15 +308,14 @@ describe('PactFact', () => {
 
         const aliceBalanceAfter = await pactFactAlice.accountBalances(await alice.getAddress())
         const bobBalanceAfter = await pactFactAlice.accountBalances(await bob.getAddress())
-        const matrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
         assert.equal(
             Number(aliceBalanceAfter),
-            Number(aliceBalanceBefore.add(matrix[index].p1)),
+            Number(aliceBalanceBefore.add(defMatrix[index].p1)),
             'alice balance'
         )
         assert.equal(
             Number(bobBalanceAfter),
-            Number(bobBalanceBefore.add(matrix[index].p2)),
+            Number(bobBalanceBefore.add(defMatrix[index].p2)),
             'bob balance'
         )
     }
@@ -336,12 +335,12 @@ describe('PactFact', () => {
         const PactFactFactory = new PactFact__factory(alice)
         pactFactAlice = await PactFactFactory.deploy(TIMEOUT)
         pactFactBob = pactFactAlice.connect(bob)
+
+        defMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
     })
 
     describe('proposePact', () => {
         it("fails if p2 is 0 address", async () => {
-            const defMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
-
             await expect(pactFactAlice.proposePact(
                 ethers.constants.AddressZero,
                 DEF_P1_DEP,
@@ -356,8 +355,6 @@ describe('PactFact', () => {
         })
 
         it("fails if value isn't p1Deposit", async () => {
-            const defMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
-
             await expect(pactFactAlice.proposePact(
                 await bob.getAddress(),
                 DEF_P1_DEP,
@@ -372,7 +369,6 @@ describe('PactFact', () => {
         })
 
         it("fails if matrix isn't valid", async () => {
-            const defMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
             defMatrix[0].p1 = defMatrix[0].p1.add(10)
 
             await expect(pactFactAlice.proposePact(
@@ -609,28 +605,26 @@ describe('PactFact', () => {
 
     describe('validateMatrix', () => {
         it("returns for valid matrix", async () => {
-            const matrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
             const validity = await pactFactAlice.validateMatrix(
                 DEF_P1_DEP,
                 DEF_P2_DEP,
-                matrix[0],
-                matrix[1],
-                matrix[2],
-                matrix[3]
+                defMatrix[0],
+                defMatrix[1],
+                defMatrix[2],
+                defMatrix[3]
             )
             assert.equal(validity, true, 'valid matrix')
         })
 
         it("throws for invalid matrix", async () => {
-            const matrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
-            matrix[0].p1 = matrix[0].p1.add(100)
+            defMatrix[0].p1 = defMatrix[0].p1.add(100)
             await expect(pactFactAlice.validateMatrix(
                 DEF_P1_DEP,
                 DEF_P2_DEP,
-                matrix[0],
-                matrix[1],
-                matrix[2],
-                matrix[3]
+                defMatrix[0],
+                defMatrix[1],
+                defMatrix[2],
+                defMatrix[3]
             )).to.be.reverted
         })
     })
@@ -645,14 +639,12 @@ describe('PactFact', () => {
 
         it("changes account balance to 0, emits WithdrawEther", async () => {
             await submitDefAnswer1(true, true, 0)
-
-            const payoutMatrix = defPayoutMatrix(DEF_P1_DEP, DEF_P2_DEP)
             
             await expect(pactFactAlice.withdraw(await alice.getAddress()))
                 .to.emit(pactFactAlice, "WithdrawEther")
                 .withArgs(
                     await alice.getAddress(),
-                    payoutMatrix[0].p1
+                    defMatrix[0].p1
                 )
 
             const aliceBalance = Number(ethers.utils.formatEther(
