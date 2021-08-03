@@ -41,3 +41,8 @@ For this data to become useful for decentralized reputation and discovery, somet
 2. `yarn test`
 
 Credit to Jesse B. Miller for the original idea of a repeated prisoner's dilemma tool <3
+
+## Contact
+Ezra -> [@m0zrat](https://www.twitter.com/m0zrat)
+
+Jesse -> [@jessebmiller](https://www.twitter.com/jessebmiller)
