@@ -6,7 +6,8 @@
   "author": "Ezra Weller (ezra.weller@gmail.com)",
   "license": "MIT",
   "scripts": {
-    "test": "hardhat compile && hardhat test"
+    "test": "hardhat compile && hardhat test",
+    "test-local": "hardhat compile && hardhat test --network local"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",

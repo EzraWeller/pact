@@ -75,8 +75,8 @@ describe('PactFact', () => {
     let defMatrix: [Payout, Payout, Payout, Payout]
 
     const TIMEOUT = 1
-    const DEF_P1_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('10')
-    const DEF_P2_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('10')
+    const DEF_P1_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('50')
+    const DEF_P2_DEP: ethersTypes.BigNumber = ethers.utils.parseEther('50')
     const P1_SALT: ethersTypes.utils.BytesLike = ethers.utils.formatBytes32String('birthday')
     const DEF_TAGS = 'prisoner,dilemma,tags'
     const BYTES32_0 = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -672,7 +672,7 @@ describe('PactFact', () => {
             ))
             assert.equal(
                 aliceEtherAfter,
-                aliceEtherBefore - etherOnGas + aliceBalanceBefore,
+                Number((aliceEtherBefore - etherOnGas + aliceBalanceBefore).toFixed(9)),
                 'ether transfer' 
             )
         })
